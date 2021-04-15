@@ -1,0 +1,154 @@
+{
+  "variables": {
+    "timestamp": "{{isotime \"2006-01-02-150405\"}}",
+    "solution_install": "Build_Version",
+    "windows_version": "Build_Version",
+    "vcpus": "4",
+    "vm_version": "13",
+    "vcores": "2",
+    "vram": "8192",
+    "vdisk": "40960",
+    "vvideoram": "8192",
+    "vcenter": "(Domain_Name)",
+    "vc_dc": "CWxTI",
+    "vc_folder": "packer-build",
+    "vc_cluster": "HP-GEN10",
+    "vm_name": "packer-win2016-de-template",
+    "vc_datastore": "LS5T2C281_00_0070",
+    "vc_network": "dvnet10_190_153",
+    "vc_isopath": "[LS5T2C281_00_0070]",
+    "iso_name": "ISOs/en_windows_server_2016_updated_may_2018_x64_dvd.iso",
+    "vmtooliso_name": "ISOs/VMware-tools-windows-11.0.6-15940789.iso",
+    "maketemplate": "true"
+  },
+  "builders": [
+    {
+      "type": "vsphere-iso",
+      "vcenter_server": "{{user `vcenter`}}",
+      "username": "{{user `vc_username`}}",
+      "password": "{{user `vc_password`}}",
+      "insecure_connection": "true",
+      "datacenter": "{{user `vc_dc`}}",
+      "cluster": "{{user `vc_cluster`}}",
+      "folder": "{{user `vc_folder`}}",
+      "vm_name": "{{ user `vm_name`}}-{{ user `timestamp` }}",
+      "datastore": "{{user `vc_datastore`}}",
+      "convert_to_template": "{{user `maketemplate`}}",
+      "guest_os_type": "windows9Server64Guest",
+      "vm_version": "{{user `vm_version`}}",
+      "CPUs": "{{user `vcpus`}}",
+      "cpu_cores": "{{user `vcores`}}",
+      "RAM": "{{user `vram`}}",
+      "disk_controller_type": "lsilogic-sas",
+      "firmware": "efi",
+      "video_ram": "{{user `vvideoram`}}",
+      "iso_paths": [
+        "{{user `vc_isopath`}}/{{user `iso_name`}}",
+        "{{user `vc_isopath`}}/{{user `vmtooliso_name`}}"
+      ],
+      "network_adapters": [
+        {
+          "network": "{{user `vc_network`}}",
+          "network_card": "vmxnet3"
+        }
+      ],
+      "storage": [
+        {
+          "disk_size": "{{user `vdisk`}}",
+          "disk_thin_provisioned": "true"
+        }
+      ],
+      "communicator": "winrm",
+      "winrm_username": "packer",
+      "winrm_password": "packer",
+      "winrm_timeout": "120m",
+      "shutdown_command": "shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\"",
+      "shutdown_timeout": "240m",
+      "floppy_files": [
+        "windows/answer_files/2016/vmware-std/Autounattend.xml"
+      ],
+      "boot_command": "<spacebar><wait1><spacebar><wait2><enter>",
+      "boot_wait": "2s"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "powershell",
+      "inline": [
+        "Write-Output \"Set strong cryptography on 64 bit .Net Framework (version 4 and above)\"",
+        "Set-ItemProperty -Path \"HKLM:\\SOFTWARE\\Wow6432Node\\Microsoft\\.NetFramework\\v4.0.30319\" -Name \"SchUseStrongCrypto\" -Value \"1\" -Type DWord",
+        "Write-Output \"Set strong cryptography on 32 bit .Net Framework (version 4 and above)\"",
+        "Set-ItemProperty -Path \"HKLM:\\SOFTWARE\\Microsoft\\.NetFramework\\v4.0.30319\" -Name \"SchUseStrongCrypto\" -Value \"1\" -Type DWord"
+      ],
+      "elevated_user": "packer",
+      "elevated_password": "packer"
+    },
+    {
+      "type": "windows-restart",
+      "restart_timeout": "120m"
+    },
+    {
+      "type": "powershell",
+      "scripts": [
+        "windows/scripts/vmware-packer-startup.ps1"
+      ],
+      "elevated_user": "packer",
+      "elevated_password": "packer"
+    },
+    {
+      "type": "windows-restart",
+      "restart_timeout": "120m"
+    },
+    {
+      "type": "windows-update",
+      "filters": [
+        "include:$_.Title -like '*Servicing Stack Update for Windows*'"
+      ]
+    },
+    {
+      "type": "windows-restart",
+      "restart_timeout": "120m"
+    },
+    {
+      "type": "windows-update",
+      "filters": [
+        "include:$_.Title -like '*Cumulative Update*'"
+      ]
+    },
+    {
+      "type": "windows-restart",
+      "restart_timeout": "120m"
+    },
+    {
+      "type": "windows-update"
+    },
+    {
+      "type": "windows-restart",
+      "restart_timeout": "120m"
+    },
+    {
+      "type": "powershell",
+      "scripts": [
+        "windows/scripts/vmware-packer-scripts.ps1"
+      ],
+      "elevated_user": "packer",
+      "elevated_password": "packer"
+    },
+    {
+      "type": "windows-restart",
+      "restart_timeout": "120m"
+    },
+    {
+      "type": "powershell",
+      "scripts": [
+        "windows/scripts/vmware-packer-finish.ps1"
+      ],
+      "elevated_user": "packer",
+      "elevated_password": "packer"
+    },
+    {
+      "type": "windows-restart",
+      "restart_timeout": "120m"
+    }
+  ]
+}
