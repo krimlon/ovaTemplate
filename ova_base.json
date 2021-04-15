@@ -12,13 +12,13 @@
     "vcenter": "(Domain_Name)",
     "vc_dc": "CWxTI",
     "vc_folder": "packer-build",
-    "vc_cluster": "HP-GEN10",
-    "vm_name": "packer-win2016-de-template",
-    "vc_datastore": "LS5T2C281_00_0070",
-    "vc_network": "dvnet10_190_153",
-    "vc_isopath": "[LS5T2C281_00_0070]",
-    "iso_name": "ISOs/en_windows_server_2016_updated_may_2018_x64_dvd.iso",
-    "vmtooliso_name": "ISOs/VMware-tools-windows-11.0.6-15940789.iso",
+    "vc_cluster": "Cluster_name",
+    "vm_name": "template_name",
+    "vc_datastore": "Datastore_name",
+    "vc_network": "network_name",
+    "vc_isopath": "[isopath]",
+    "iso_name": "ISOs/en_windows_server_2016.iso",
+    "vmtooliso_name": "ISOs/VMware-tools-windows-11.0.6.iso",
     "maketemplate": "true"
   },
   "builders": [
@@ -39,7 +39,7 @@
       "CPUs": "{{user `vcpus`}}",
       "cpu_cores": "{{user `vcores`}}",
       "RAM": "{{user `vram`}}",
-      "disk_controller_type": "lsilogic-sas",
+      "disk_controller_type": "type",
       "firmware": "efi",
       "video_ram": "{{user `vvideoram`}}",
       "iso_paths": [
@@ -80,8 +80,8 @@
         "Write-Output \"Set strong cryptography on 32 bit .Net Framework (version 4 and above)\"",
         "Set-ItemProperty -Path \"HKLM:\\SOFTWARE\\Microsoft\\.NetFramework\\v4.0.30319\" -Name \"SchUseStrongCrypto\" -Value \"1\" -Type DWord"
       ],
-      "elevated_user": "packer",
-      "elevated_password": "packer"
+      "elevated_user": "#change_user#",
+      "elevated_password": "#change password#"
     },
     {
       "type": "windows-restart",
@@ -90,10 +90,10 @@
     {
       "type": "powershell",
       "scripts": [
-        "windows/scripts/vmware-packer-startup.ps1"
+        "windows/scripts/vmware-packer-startup.ps1" #startup script can be edited
       ],
-      "elevated_user": "packer",
-      "elevated_password": "packer"
+      "elevated_user": "#change_user#",
+      "elevated_password": "#change password#"
     },
     {
       "type": "windows-restart",
@@ -131,8 +131,8 @@
       "scripts": [
         "windows/scripts/vmware-packer-scripts.ps1"
       ],
-      "elevated_user": "packer",
-      "elevated_password": "packer"
+      "elevated_user": "#change user#",
+      "elevated_password": "#change password#"
     },
     {
       "type": "windows-restart",
